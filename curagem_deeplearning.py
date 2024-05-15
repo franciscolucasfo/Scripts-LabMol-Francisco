@@ -1,17 +1,14 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-
 import os
 from pathlib import Path
+
 from rdkit import Chem
 from chembl_structure_pipeline import standardizer
-from rdkit.Chem.MolStandardize.metal import MetalDisconnector
 import rdkit.Chem.MolStandardize.rdMolStandardize as rdMolStandardize
 from rdkit.Chem import PandasTools
-
 from rdkit.Chem import inchi as rd_inchi
-
 from molvs import standardize_smiles
 from molvs import Standardizer
 
