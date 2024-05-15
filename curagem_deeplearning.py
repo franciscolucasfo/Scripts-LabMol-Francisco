@@ -26,49 +26,45 @@ for path in tqdm(pathlist, desc="Processing files"):
     path_name = path.name
     path_str = str(path)
     
-    df0  = pd.read_csv(path_str)
+    df  = pd.read_csv(path_str)
 
-    df0 = df0.loc[:, ['PUBCHEM_EXT_DATASOURCE_SMILES', 'PUBCHEM_ACTIVITY_OUTCOME', 'PUBCHEM_CID']]
-    df0 = df0.rename(columns={'PUBCHEM_EXT_DATASOURCE_SMILES':'Molecule', 'PUBCHEM_ACTIVITY_OUTCOME':'Outcome'})
+    df = df.loc[:, ['PUBCHEM_EXT_DATASOURCE_SMILES', 'PUBCHEM_ACTIVITY_OUTCOME', 'PUBCHEM_CID']]
+    df = df.rename(columns={'PUBCHEM_EXT_DATASOURCE_SMILES':'Molecule', 'PUBCHEM_ACTIVITY_OUTCOME':'Outcome'})
 
-    df0 = df0.dropna(subset=['Molecule'])
-    df0 = df0.dropna(subset=['Outcome'])
+    df = df.dropna(subset=['Molecule'])
+    df = df.dropna(subset=['Outcome'])
     
-    df0['Outcome'] = df0['Outcome'].apply(string_to_int)
+    df['Outcome'] = df['Outcome'].apply(string_to_int)
 
-    rdMol = [Chem.MolFromSmiles(smile, sanitize=True) for smile in df0['Molecule']]
-    molBlock = [Chem.MolToMolBlock(mol) for mol in rdMol]
-    stdMolBlock = [standardizer.standardize_molblock(mol_block) for mol_block in molBlock]
-    molFromMolBlock = [Chem.MolFromMolBlock(std_molblock) for std_molblock in stdMolBlock]
-    mol2smiles = [Chem.MolToSmiles(m) for m in molFromMolBlock]
-    df0['final_smiles'] = mol2smiles
-    df0 = df0.reset_index(drop=True)
+    # Standardize the SMILES
+    df['final_smiles'] = [Chem.MolToSmiles(Chem.MolFromMolBlock(standardizer.standardize_molblock(Chem.MolToMolBlock(Chem.MolFromSmiles(smile, sanitize=True))))) for smile in df['Molecule']]
+    df = df.reset_index(drop=True)
 
-    df0 = df0.dropna(subset=['final_smiles'])
-    df0 = df0.loc[:, ['final_smiles', 'Outcome', 'PUBCHEM_CID']]
+    df = df.dropna(subset=['final_smiles'])
+    df = df.loc[:, ['final_smiles', 'Outcome', 'PUBCHEM_CID']]
 
     # Calculate the InChI
     inchi_list = []
-    for smiles in df0['final_smiles']:
+    for smiles in df['final_smiles']:
         mol = Chem.MolFromSmiles(smiles)
         inchi = Chem.inchi.MolToInchi(mol)
         inchi_list.append(inchi)
 
     # Adicionar a coluna de InChI no dataframe
-    df0['InChI'] = inchi_list
+    df['InChI'] = inchi_list
 
-    df0_active = df0.query('Outcome == 0')
-    df0_inactive = df0.query('Outcome == 1')
+    df_active = df.query('Outcome == 0')
+    df_inactive = df.query('Outcome == 1')
 
-    df0_active = df0_active.drop_duplicates(subset=['InChI'], inplace=False)
-    df0_inactive = df0_inactive.drop_duplicates(subset=['InChI'], inplace=False)
+    df_active = df_active.drop_duplicates(subset=['InChI'], inplace=False)
+    df_inactive = df_inactive.drop_duplicates(subset=['InChI'], inplace=False)
 
-    df_no_dup_concord = pd.concat([df0_active, df0_inactive], axis=0)
+    df_no_dup_concord = pd.concat([df_active, df_inactive], axis=0)
 
     final_drop_dup = df_no_dup_concord.drop_duplicates(subset=['InChI'], keep=False, inplace=False)
 
-    df0 = final_drop_dup
-    df0 = df0.reset_index(drop=True)
+    df = final_drop_dup
+    df = df.reset_index(drop=True)
 
-    df0.to_csv(os.path.join(savepath, f"Curated_{path_name}"), index=False)
+    df.to_csv(os.path.join(savepath, f"Curated_{path_name}"), index=False)
     print(f"File {path_name} curated has been saved.")
