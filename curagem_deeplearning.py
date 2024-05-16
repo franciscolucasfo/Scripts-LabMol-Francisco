@@ -16,8 +16,8 @@ def string_to_int(s):
     mapping = {"Active": 1, "Inactive": 0}
     return mapping.get(s, None)
 
-pathlist = Path(r"D:\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\THP1\RAW").glob('**/*.csv')
-savepath = r"D:\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe"
+pathlist = Path(r"C:\Users\LabMo\Desktop\teste_script_curagem").glob('**/*.csv')
+savepath = r"C:\Users\LabMo\Desktop\teste_script_curagem\Result"
 
 for path in tqdm(pathlist, desc="Processing files"):
     path_name = path.name
@@ -25,6 +25,7 @@ for path in tqdm(pathlist, desc="Processing files"):
     
     df  = pd.read_csv(path_str)
 
+    print(f"Working on {path_name} ...")
     df = df.loc[:, ['PUBCHEM_EXT_DATASOURCE_SMILES', 'PUBCHEM_ACTIVITY_OUTCOME', 'PUBCHEM_CID']]
     df = df.rename(columns={'PUBCHEM_EXT_DATASOURCE_SMILES':'Molecule', 'PUBCHEM_ACTIVITY_OUTCOME':'Outcome'})
 
