@@ -12,12 +12,13 @@ from rdkit.Chem import inchi as rd_inchi
 from molvs import standardize_smiles
 from molvs import Standardizer
 
+
 def string_to_int(s):
     mapping = {"Active": 1, "Inactive": 0}
     return mapping.get(s, None)
 
-pathlist = Path(r"C:\Users\LabMo\Desktop\teste_script_curagem").glob('**/*.csv')
-savepath = r"C:\Users\LabMo\Desktop\teste_script_curagem\Result"
+pathlist = Path(r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\3T3\RAW").glob('**/*.csv')
+savepath = r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\3T3"
 
 for path in tqdm(pathlist, desc="Processing files"):
     path_name = path.name
@@ -34,7 +35,7 @@ for path in tqdm(pathlist, desc="Processing files"):
     
     df['Outcome'] = df['Outcome'].apply(string_to_int)
 
-    # Standardize the SMILES
+    
     df['final_smiles'] = [Chem.MolToSmiles(Chem.MolFromMolBlock(standardizer.standardize_molblock(Chem.MolToMolBlock(Chem.MolFromSmiles(smile, sanitize=True))))) for smile in df['Molecule']]
     df = df.reset_index(drop=True)
 
