@@ -1,3 +1,4 @@
+# Importing the necessary libraries
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -17,8 +18,17 @@ def string_to_int(s):
     mapping = {"Active": 1, "Inactive": 0}
     return mapping.get(s, None)
 
-pathlist = Path(r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\3T3\RAW").glob('**/*.csv')
-savepath = r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\3T3"
+def remove_invalid_smiles(df):
+        valid_smiles = []
+        for smile in df['Molecule']:
+            mol = Chem.MolFromSmiles(smile)
+            if mol is not None:
+                valid_smiles.append(smile)
+        df = df[df['Molecule'].isin(valid_smiles)]
+        return df
+
+pathlist = Path(r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe\Sabrina_dataset").glob('**/*.csv')
+savepath = r"C:\Users\franc\OneDrive\Documentos\LabMol\IC-Citotoxicidade\DeepCytosafe"
 
 for path in tqdm(pathlist, desc="Processing files"):
     path_name = path.name
@@ -34,8 +44,9 @@ for path in tqdm(pathlist, desc="Processing files"):
     df = df.dropna(subset=['Outcome'])
     
     df['Outcome'] = df['Outcome'].apply(string_to_int)
+    df = remove_invalid_smiles(df)
 
-    
+    # Standardize the SMILES
     df['final_smiles'] = [Chem.MolToSmiles(Chem.MolFromMolBlock(standardizer.standardize_molblock(Chem.MolToMolBlock(Chem.MolFromSmiles(smile, sanitize=True))))) for smile in df['Molecule']]
     df = df.reset_index(drop=True)
 
